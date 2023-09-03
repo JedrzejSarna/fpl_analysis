@@ -1,5 +1,5 @@
 PLOTS:
-
+*hard* pie chart how fpl points are distributed - % of just playing, % of goals, % of assists
 
 FUNCTIONS:
 
