@@ -88,8 +88,9 @@ class DATASETS:
         }
         remaining_columns = list(set(player_dataset.columns).difference(relevant_columns_description.keys()))
         player_dataset.drop(remaining_columns, axis=1, inplace=True)
-        
         self.player_dataset = player_dataset
+
+
 
 
     def build_team_dataset(self):
@@ -99,6 +100,8 @@ class DATASETS:
         #subset for relevant columns
         teams_dataset = teams_dataset[relevant_columns_description_teams]
         self.teams_dataset = teams_dataset
+
+
 
 
     def build_events_dataset(self):
@@ -112,7 +115,7 @@ class DATASETS:
     def transform_player_dataset(self):
         element_types_dataset = pd.DataFrame.from_dict(self.data['element_types'])
         # join player positions
-        final_dataset = self.player_dataset.merge(
+        self.final_dataset = self.player_dataset.merge(
             self.teams_dataset,
             left_on='team',
             right_on='id',
@@ -122,19 +125,22 @@ class DATASETS:
             left_on='element_type',
             right_on='id')
         # rename columns
-        final_dataset = final_dataset.rename(columns={'name':'team_name', 'singular_name':'position_name', 'id': 'id_position'})
-        final_dataset = final_dataset.drop(columns=['element_type', 'sub_positions_locked', 'element_count', 'ui_shirt_specific', 'plural_name', 'plural_name_short'])
-        self.final_dataset = final_dataset
+        self.final_dataset = self.final_dataset.rename(columns={'name':'team_name', 'singular_name':'position_name', 'id': 'id_position'})
+        self.final_dataset = self.final_dataset.drop(columns=['element_type', 'sub_positions_locked', 'element_count', 'ui_shirt_specific', 'plural_name', 'plural_name_short'])
+        self.final_dataset = self.final_dataset
+
 
 
     def df_fplpoints_per_club(self):
         fpl_points_per_club = self.final_dataset.groupby('team_name')['total_points'].sum()
         return fpl_points_per_club
 
+
     def df_fplpoints_per_position(self):
         played_already = self.final_dataset[self.final_dataset['minutes'] >= 1]
         fpl_points_per_position = played_already.groupby('position_name')['total_points'].agg(['sum', 'mean', 'count']).reindex(['Goalkeeper', 'Defender', 'Midfielder', 'Forward'])
         return fpl_points_per_position
+
 
     def df_goals_vs_xg(self):
         self.final_dataset['expected_goals'] = self.final_dataset['expected_goals'].astype(float)
@@ -142,3 +148,88 @@ class DATASETS:
         G_per_club = self.final_dataset.groupby('team_name')['goals_scored'].sum()
         df_goals_vs_xg = pd.concat([xG_per_club, G_per_club], axis=1)
         return df_goals_vs_xg
+    
+
+    def df_goals_against_vs_xga(self):
+        gk_df = self.final_dataset[(self.final_dataset['position_name'] == 'Goalkeeper') & (self.final_dataset['minutes'] >=1 )]
+        gk_df['expected_goals_conceded'] = gk_df['expected_goals_conceded'].astype(float)
+        xGa_per_club = gk_df.groupby('team_name')['expected_goals_conceded'].sum()
+        Ga_per_club = gk_df.groupby('team_name')['goals_conceded'].sum()
+        df_goals_ag_vs_xga = pd.concat([xGa_per_club, Ga_per_club], axis=1)
+        return df_goals_ag_vs_xga
+
+
+    def df_fplpoints_split(self):
+        total_pts = self.final_dataset['total_points'].sum()
+        #positive points
+        goal_pts=sum(self.final_dataset.groupby('position_name')['goals_scored'].sum()*[6,4,6,5])
+        assist_pts = self.final_dataset['assists'].sum()*3
+        penalty_save_pts = self.final_dataset[self.final_dataset['position_name'] == 'Goalkeeper']['penalties_saved'].sum()*5
+        bps_pts = self.final_dataset['bonus'].sum()
+        cs_pts = sum(self.final_dataset.groupby('position_name')['clean_sheets'].sum()*[4,0,4,1])
+        start_pts = self.final_dataset['starts'].sum()*2
+        saves_pts = round(self.final_dataset['saves'].sum()/3)
+        sub_pts = len(self.final_dataset[(self.final_dataset['starts']==0) & (self.final_dataset['minutes'] > 0)])
+        #negative points
+        penalty_miss_pts = self.final_dataset['penalties_missed'].sum()*(-2)
+        yc_pts = self.final_dataset['yellow_cards'].sum()*(-1)
+        rc_pts = self.final_dataset['red_cards'].sum()*(-3)
+        og_pts = self.final_dataset['own_goals'].sum()*(-2)
+        small_pts = penalty_save_pts + penalty_miss_pts + og_pts
+
+        points = [goal_pts, assist_pts, bps_pts, start_pts, sub_pts, cs_pts, saves_pts, yc_pts, rc_pts, small_pts]
+        points = sorted(points, reverse = True)
+        categories = ['> 60 minutes', 'Goals', 'Clean Sheets', 'Assists', 'Bonus points', '< 60 minutes', 'Saves', 'Penalty saves \n Penalty misses \n Own goals', 'Red cards', 'Yellow cards']
+        percentages = [round(value / total_pts , 4) * 100 for value in points]
+        df_categories_percentage = pd.DataFrame({"Action" : categories, "Percentage (%)" : percentages})
+        return df_categories_percentage
+
+
+###############   TO BE CONTINUED   #####################
+
+    base_url = 'https://fantasy.premierleague.com/api/'
+
+    def get_player_id(player):
+        '''get player id for a given player based on full name'''
+
+        from fuzzywuzzy import fuzz, process
+
+        first_name, second_name = player.split()
+        first_name = process.extractOne(first_name, player_dataset['first_name'])[0]
+        second_name = process.extractOne(second_name, player_dataset['second_name'])[0]
+
+        player_id = final_dataset.loc[(final_dataset['first_name'].isin([first_name])) & (final_dataset['second_name'].isin([second_name])), 'id_player'].values[0]
+
+        return player_id
+
+
+
+
+
+    def get_gameweek_history(player):
+        '''get all gameweek info for a given player based on full name'''
+
+        player_id = get_player_id(player)
+
+        r = requests.get(
+                base_url + 'element-summary/' + str(player_id) + '/').json()
+        
+        df = pd.json_normalize(r['history'])
+        
+        return df
+
+
+
+
+
+    def get_season_history(player):
+        '''get all past season info for a given player based on full name'''
+
+        player_id = get_player_id(player)
+
+        r = requests.get(
+                base_url + 'element-summary/' + str(player_id) + '/').json()
+        
+        df = pd.json_normalize(r['history_past'])
+        
+        return df
