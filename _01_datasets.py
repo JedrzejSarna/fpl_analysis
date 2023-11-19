@@ -3,12 +3,17 @@ import pandas as pd
 import numpy as np
 import json
 import pandas as pd
+import fuzzywuzzy
 
 class DATASETS:
     def __init__(self):
         self.url = 'https://fantasy.premierleague.com/api/bootstrap-static/'
+        self.url_for_player= 'https://fantasy.premierleague.com/api/'
         response = requests.get(self.url)
         self.data = json.loads(response.text)
+
+###############   BUILD DATASETS  #####################
+
 
     def build_player_dataset(self):
         # Create pandas DataFrame from JSON player data
@@ -91,8 +96,6 @@ class DATASETS:
         self.player_dataset = player_dataset
 
 
-
-
     def build_team_dataset(self):
         teams_dataset = pd.DataFrame.from_dict(self.data['teams'])
         relevant_columns_description_teams = ['id', 'name', 'short_name', 'strength', 'strength_overall_home', 'strength_overall_away', \
@@ -102,17 +105,12 @@ class DATASETS:
         self.teams_dataset = teams_dataset
 
 
-
-
     def build_events_dataset(self):
         events_dataset = pd.DataFrame.from_dict(self.data['events'])
         self.events_dataset =  events_dataset
     
 
-
-
-
-    def transform_player_dataset(self):
+    def final_player_dataset(self):
         element_types_dataset = pd.DataFrame.from_dict(self.data['element_types'])
         # join player positions
         self.final_dataset = self.player_dataset.merge(
@@ -129,6 +127,8 @@ class DATASETS:
         self.final_dataset = self.final_dataset.drop(columns=['element_type', 'sub_positions_locked', 'element_count', 'ui_shirt_specific', 'plural_name', 'plural_name_short'])
         self.final_dataset = self.final_dataset
 
+
+###############   TRANSFORM / USE DATASETS  #####################
 
 
     def df_fplpoints_per_club(self):
@@ -185,51 +185,43 @@ class DATASETS:
         return df_categories_percentage
 
 
-###############   TO BE CONTINUED   #####################
+###############   PLAYERS DATASET  #####################
 
-    base_url = 'https://fantasy.premierleague.com/api/'
-
-    def get_player_id(player):
+    def get_player_id(self, player):
         '''get player id for a given player based on full name'''
-
         from fuzzywuzzy import fuzz, process
-
         first_name, second_name = player.split()
-        first_name = process.extractOne(first_name, player_dataset['first_name'])[0]
-        second_name = process.extractOne(second_name, player_dataset['second_name'])[0]
-
-        player_id = final_dataset.loc[(final_dataset['first_name'].isin([first_name])) & (final_dataset['second_name'].isin([second_name])), 'id_player'].values[0]
-
+        first_name = process.extractOne(first_name, self.player_dataset['first_name'])[0]
+        second_name = process.extractOne(second_name, self.player_dataset['second_name'])[0]
+        player_id = self.final_dataset.loc[(self.final_dataset['first_name'].isin([first_name])) & (self.final_dataset['second_name'].isin([second_name])), 'id_player'].values[0]
         return player_id
 
+    def get_player_json(self, player):
+        '''get json file of player'''
+        json_file = requests.get(self.url_for_player + 'element-summary/' + str(self.get_player_id(player)) + '/').json()
+        return json_file
 
 
-
-
-    def get_gameweek_history(player):
-        '''get all gameweek info for a given player based on full name'''
-
-        player_id = get_player_id(player)
-
-        r = requests.get(
-                base_url + 'element-summary/' + str(player_id) + '/').json()
-        
-        df = pd.json_normalize(r['history'])
-        
-        return df
-
-
-
-
-
-    def get_season_history(player):
-        '''get all past season info for a given player based on full name'''
-
-        player_id = get_player_id(player)
-
-        r = requests.get(
-                base_url + 'element-summary/' + str(player_id) + '/').json()
-        
-        df = pd.json_normalize(r['history_past'])
-        
-        return df
+    def df_player_season(self, player):
+        '''get all season info for a given player based on full name'''
+        df_season = pd.json_normalize(self.get_player_json(player)['history'])
+        df_season.drop(columns=['element', 'fixture', 'round'], inplace=True)
+        temp_dict= dict(zip(self.teams_dataset['id'],self.teams_dataset['name']))
+        df_season['opponent_team'] = df_season['opponent_team'].map(temp_dict)
+        return df_season
+    
+    def df_player_past_seasons(self, player):
+        '''get all past seasons info for a given player based on full name'''
+        df_past_seasons = pd.json_normalize(self.get_player_json(player)['history_past'])
+        df_past_seasons.drop(columns=['element_code'], inplace=True)
+        return df_past_seasons
+    
+    def df_player_upcom_fixtures(self, player):
+        '''get all remaining fixtures info for a given player based on full name'''
+        df_fixtures = pd.json_normalize(self.get_player_json(player)['fixtures'])
+        df_fixtures.drop(columns=['id', 'code', 'team_h_score', 'team_a_score', 'event', 'finished', 'minutes', 'provisional_start_time'], inplace = True)
+        temp_dict= dict(zip(self.teams_dataset['id'],self.teams_dataset['name']))
+        df_fixtures['team_h'] = df_fixtures['team_h'].map(temp_dict)
+        df_fixtures['team_a'] = df_fixtures['team_a'].map(temp_dict)
+        df_fixtures.set_index('event_name', inplace=True)
+        return df_fixtures

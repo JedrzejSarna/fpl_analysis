@@ -1,9 +1,7 @@
-from datasets import *
-
+from _01_datasets import *
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-import fuzzywuzzy
 import warnings
 import matplotlib.patches as patches
 from IPython.display import display, Image
@@ -14,7 +12,6 @@ warnings.filterwarnings('ignore')
 
 
 class PLOTS(DATASETS):
-
     def __init__(self):
         super().__init__()
         self.pl_colors_list = [
@@ -74,7 +71,6 @@ class PLOTS(DATASETS):
         plt.show()
         if save == True:       
             plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
-
 
 
 
