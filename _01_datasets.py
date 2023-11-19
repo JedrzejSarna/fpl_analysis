@@ -15,143 +15,96 @@ class DATASETS:
 ###############   BUILD DATASETS  #####################
 
 
-    def build_player_dataset(self):
-        # Create pandas DataFrame from JSON player data
-        player_dataset = pd.DataFrame.from_dict(self.data['elements'])
-        #based on this the relevant columns are
-        relevant_columns_description={
-            'cost_change_start':'price change since start',
-            'dreamteam_count':'nr of times in dreamteam',
-            'element_type':'position in game',
-            'event_points':'points in last gameweek',
-            'first_name':'first name',
-            'form':'form',
-            'in_dreamteam':'whether in current dreamteam',
-            'now_cost':'current price *10',
-            'points_per_game': 'points per game',
-            'second_name': 'second name',
-            'selected_by_percent': 'selected by percent',
-            'team':'team nr based on alphabetical order',
-            #'team_code':'team code ???',
-            'total_points': 'total points',
-            'transfers_in': 'total transfers in',
-            'transfers_in_event': 'transfers in this gameweek',
-            'transfers_out': 'total transfers out',
-            'transfers_out_event': 'transfers out this gameweek',
-            'value_form':'form / value rounded',
-            'value_season':'total points / value rounded',
-            'minutes':'minutes',
-            'goals_scored': 'goals scored',
-            'assists': 'assists',
-            'clean_sheets': 'clean sheets',
-            'goals_conceded': 'goals conceded',
-            'own_goals': 'own goals',
-            'penalties_saved': 'penalties saved',
-            'penalties_missed': 'penalties missed',
-            'yellow_cards': 'yellow cards',
-            'red_cards': 'red cards',
-            'saves' : 'saves',
-            'bonus':'total bonus points (fpl points)',
-            'bps':'total bonus points',
-            'influence':'total influence metric',
-            'creativity':'total creativity metric',
-            'threat':'total threat metric',
-            'ict_index':'total ict index',
-            'starts':'starts',
-            'expected_goals':'total expected goals',
-            'expected_assists':'total expected assists',
-            'expected_goal_involvements':'total expected goal involvements',
-            'expected_goals_conceded':'total expected goals conceded',
-            'influence_rank':'rank for influence across all positions',
-            #'influence_rank_type':'something with position???',
-            'creativity_rank':'rank for creativity across all positions',
-            #'creativity_rank_type':'something with position???',
-            'threat_rank':'rank for threat across all positions',
-            #'threat_rank_type':'something with position???',
-            'ict_index_rank':'rank for ict index across all positions',
-            #'ict_index_rank_type':'something with position???',
-            'corners_and_indirect_freekicks_order':'corners and indirect freekicks order, not complete',
-            'direct_freekicks_order':'direct freekicks order, not complete',
-            'penalties_order':'penalties order, not complete',
-            'expected_goals_per_90':'expected goals per_90',
-            'saves_per_90':'saves per 90',
-            'expected_assists_per_90':'expected assists per 90',
-            'expected_goal_involvements_per_90':'expected goal involvements per 90',
-            'expected_goals_conceded_per_90':'expected goals conceded per 90',
-            'goals_conceded_per_90':'goals conceded per 90',
-            'now_cost_rank':'rank for price across all positions',
-            #'now_cost_rank_type':'something with position???',
-            'form_rank':'rank for form across all positions',
-            #'form_rank_type':'something with position???',
-            'points_per_game_rank':'rank for points across all positions',
-            #'points_per_game_rank_type':'something with position???',
-            'selected_rank':'rank for selected across all positions',
-            #'selected_rank_type':'something with position???',
-            #'starts_per_90':'???',
-            'clean_sheets_per_90':'amount of minutes on pitch with clean sheet / amount of minutes on pitch',
-            'id':'id'
-        }
-        remaining_columns = list(set(player_dataset.columns).difference(relevant_columns_description.keys()))
-        player_dataset.drop(remaining_columns, axis=1, inplace=True)
-        self.player_dataset = player_dataset
+    def build_players_dataset(self):
+        players_dataset = pd.DataFrame.from_dict(self.data['elements'])
+        players_dataset.drop(columns=['chance_of_playing_next_round','chance_of_playing_this_round','code',
+                                      'cost_change_event', 'cost_change_event_fall', 'cost_change_start_fall',
+                                      'in_dreamteam', 'news', 'news_added', 'photo', 'special', 'squad_number',
+                                      'corners_and_indirect_freekicks_text','direct_freekicks_text','penalties_text',
+                                      'first_name', 'second_name', 'team_code'], axis=1, inplace=True)
+        self.players_dataset = players_dataset
 
 
-    def build_team_dataset(self):
+    def build_teams_dataset(self):
         teams_dataset = pd.DataFrame.from_dict(self.data['teams'])
-        relevant_columns_description_teams = ['id', 'name', 'short_name', 'strength', 'strength_overall_home', 'strength_overall_away', \
+        relevant_columns_description_teams = ['id', 'name', 'short_name', 'strength', 'strength_overall_home', 'strength_overall_away', 
                                             'strength_attack_home', 'strength_attack_away', 'strength_defence_home', 'strength_defence_away']
         #subset for relevant columns
         teams_dataset = teams_dataset[relevant_columns_description_teams]
+        teams_dataset.set_index('id', inplace=True)
         self.teams_dataset = teams_dataset
 
 
-    def build_events_dataset(self):
-        events_dataset = pd.DataFrame.from_dict(self.data['events'])
-        self.events_dataset =  events_dataset
+    def build_gameweeks_dataset(self):
+        gameweeks_dataset = pd.DataFrame.from_dict(self.data['events'])
+        gameweeks_dataset.drop(columns=['data_checked','highest_scoring_entry','deadline_time_epoch','deadline_time_game_offset','is_previous',
+                                     'is_next','cup_leagues_created','h2h_ko_matches_created','most_selected'], axis=1, inplace=True)
+        gameweeks_dataset.set_index('name', inplace=True)
+        self.gameweeks_dataset =  gameweeks_dataset
+
+    
+    def build_positions_dataset(self):
+        element_types_dataset = pd.DataFrame.from_dict(self.data['element_types'])
+        element_types_dataset.drop(columns=['plural_name','plural_name_short','ui_shirt_specific','sub_positions_locked'], inplace=True)
+        element_types_dataset.set_index('id', inplace=True)
+        self.positions_dataset = element_types_dataset
+
+###############   TRANSFORM DATASETS  #####################
     
 
-    def final_player_dataset(self):
-        element_types_dataset = pd.DataFrame.from_dict(self.data['element_types'])
-        # join player positions
-        self.final_dataset = self.player_dataset.merge(
-            self.teams_dataset,
+    def transform_players_dataset(self):
+        # join datasets
+        position_names = self.positions_dataset[['singular_name', 'singular_name_short']]
+        teams_names = self.teams_dataset[['name','short_name']]
+        players_dataset = pd.merge(
+            self.players_dataset,
+            teams_names,
             left_on='team',
-            right_on='id',
-            suffixes =['_player','_team']
+            right_on=teams_names.index,
         ).merge(
-            element_types_dataset,
+            position_names,
             left_on='element_type',
-            right_on='id')
+            right_on=position_names.index)
         # rename columns
-        self.final_dataset = self.final_dataset.rename(columns={'name':'team_name', 'singular_name':'position_name', 'id': 'id_position'})
-        self.final_dataset = self.final_dataset.drop(columns=['element_type', 'sub_positions_locked', 'element_count', 'ui_shirt_specific', 'plural_name', 'plural_name_short'])
-        self.final_dataset = self.final_dataset
+        players_dataset = players_dataset.rename(columns={'name':'team_name', 'singular_name':'position_name', 'web_name':'player_name',
+                                                          'cost_change_start':'price_change_start', 'ep_next':'exp_pts_next', 'ep_this':'exp_pts_this',
+                                                          'now_cost':'price', 'influence_rank_type':'influence_rank_pos', 'creativity_rank_type':'creativity_rank_pos',
+                                                          'threat_rank_type':'threat_rank_pos', 'ict_index_rank_type':'ict_index_rank_pos',
+                                                          'corners_and_indirect_freekicks_order':'corners_order', 'now_cost_rank':'price_rank',
+                                                          'now_cost_rank_type':'price_rank_pos', 'form_rank_type':'form_rank_pos',
+                                                          'points_per_game_rank_type':'points_per_game_rank_pos', 'selected_rank_type':'selected_rank_pos',
+                                                          'short_name':'team_name_short', 'singular_name_short':'position_name_short', 'id':'player_id'})
+        players_dataset = players_dataset.drop(columns=['element_type', 'team'])
+        players_dataset.sort_index(inplace=True)
+        first_column = players_dataset.pop('player_name')
+        players_dataset.insert(0, 'player_name', first_column)
+        self.players_dataset = players_dataset
 
 
-###############   TRANSFORM / USE DATASETS  #####################
+###############   SPECIFIC DATASETS  #####################
 
 
     def df_fplpoints_per_club(self):
-        fpl_points_per_club = self.final_dataset.groupby('team_name')['total_points'].sum()
+        fpl_points_per_club = self.players_dataset.groupby('team_name')['total_points'].sum()
         return fpl_points_per_club
 
 
     def df_fplpoints_per_position(self):
-        played_already = self.final_dataset[self.final_dataset['minutes'] >= 1]
+        played_already = self.players_dataset[self.players_dataset['minutes'] >= 1]
         fpl_points_per_position = played_already.groupby('position_name')['total_points'].agg(['sum', 'mean', 'count']).reindex(['Goalkeeper', 'Defender', 'Midfielder', 'Forward'])
         return fpl_points_per_position
 
 
     def df_goals_vs_xg(self):
-        self.final_dataset['expected_goals'] = self.final_dataset['expected_goals'].astype(float)
-        xG_per_club = self.final_dataset.groupby('team_name')['expected_goals'].sum()
-        G_per_club = self.final_dataset.groupby('team_name')['goals_scored'].sum()
+        self.players_dataset['expected_goals'] = self.players_dataset['expected_goals'].astype(float)
+        xG_per_club = self.players_dataset.groupby('team_name')['expected_goals'].sum()
+        G_per_club = self.players_dataset.groupby('team_name')['goals_scored'].sum()
         df_goals_vs_xg = pd.concat([xG_per_club, G_per_club], axis=1)
         return df_goals_vs_xg
     
 
     def df_goals_against_vs_xga(self):
-        gk_df = self.final_dataset[(self.final_dataset['position_name'] == 'Goalkeeper') & (self.final_dataset['minutes'] >=1 )]
+        gk_df = self.players_dataset[(self.players_dataset['position_name'] == 'Goalkeeper') & (self.players_dataset['minutes'] >=1 )]
         gk_df['expected_goals_conceded'] = gk_df['expected_goals_conceded'].astype(float)
         xGa_per_club = gk_df.groupby('team_name')['expected_goals_conceded'].sum()
         Ga_per_club = gk_df.groupby('team_name')['goals_conceded'].sum()
@@ -160,21 +113,21 @@ class DATASETS:
 
 
     def df_fplpoints_split(self):
-        total_pts = self.final_dataset['total_points'].sum()
+        total_pts = self.players_dataset['total_points'].sum()
         #positive points
-        goal_pts=sum(self.final_dataset.groupby('position_name')['goals_scored'].sum()*[6,4,6,5])
-        assist_pts = self.final_dataset['assists'].sum()*3
-        penalty_save_pts = self.final_dataset[self.final_dataset['position_name'] == 'Goalkeeper']['penalties_saved'].sum()*5
-        bps_pts = self.final_dataset['bonus'].sum()
-        cs_pts = sum(self.final_dataset.groupby('position_name')['clean_sheets'].sum()*[4,0,4,1])
-        start_pts = self.final_dataset['starts'].sum()*2
-        saves_pts = round(self.final_dataset['saves'].sum()/3)
-        sub_pts = len(self.final_dataset[(self.final_dataset['starts']==0) & (self.final_dataset['minutes'] > 0)])
+        goal_pts=sum(self.players_dataset.groupby('position_name')['goals_scored'].sum()*[6,4,6,5])
+        assist_pts = self.players_dataset['assists'].sum()*3
+        penalty_save_pts = self.players_dataset[self.players_dataset['position_name'] == 'Goalkeeper']['penalties_saved'].sum()*5
+        bps_pts = self.players_dataset['bonus'].sum()
+        cs_pts = sum(self.players_dataset.groupby('position_name')['clean_sheets'].sum()*[4,0,4,1])
+        start_pts = self.players_dataset['starts'].sum()*2
+        saves_pts = round(self.players_dataset['saves'].sum()/3)
+        sub_pts = len(self.players_dataset[(self.players_dataset['starts']==0) & (self.players_dataset['minutes'] > 0)])
         #negative points
-        penalty_miss_pts = self.final_dataset['penalties_missed'].sum()*(-2)
-        yc_pts = self.final_dataset['yellow_cards'].sum()*(-1)
-        rc_pts = self.final_dataset['red_cards'].sum()*(-3)
-        og_pts = self.final_dataset['own_goals'].sum()*(-2)
+        penalty_miss_pts = self.players_dataset['penalties_missed'].sum()*(-2)
+        yc_pts = self.players_dataset['yellow_cards'].sum()*(-1)
+        rc_pts = self.players_dataset['red_cards'].sum()*(-3)
+        og_pts = self.players_dataset['own_goals'].sum()*(-2)
         small_pts = penalty_save_pts + penalty_miss_pts + og_pts
 
         points = [goal_pts, assist_pts, bps_pts, start_pts, sub_pts, cs_pts, saves_pts, yc_pts, rc_pts, small_pts]
@@ -190,10 +143,8 @@ class DATASETS:
     def get_player_id(self, player):
         '''get player id for a given player based on full name'''
         from fuzzywuzzy import fuzz, process
-        first_name, second_name = player.split()
-        first_name = process.extractOne(first_name, self.player_dataset['first_name'])[0]
-        second_name = process.extractOne(second_name, self.player_dataset['second_name'])[0]
-        player_id = self.final_dataset.loc[(self.final_dataset['first_name'].isin([first_name])) & (self.final_dataset['second_name'].isin([second_name])), 'id_player'].values[0]
+        name = process.extractOne(player, self.players_dataset['player_name'])
+        player_id = self.players_dataset.loc[self.players_dataset['player_name'].isin(name), 'player_id'].values[0]
         return player_id
 
     def get_player_json(self, player):
@@ -206,7 +157,7 @@ class DATASETS:
         '''get all season info for a given player based on full name'''
         df_season = pd.json_normalize(self.get_player_json(player)['history'])
         df_season.drop(columns=['element', 'fixture', 'round'], inplace=True)
-        temp_dict= dict(zip(self.teams_dataset['id'],self.teams_dataset['name']))
+        temp_dict= dict(zip(self.teams_dataset.index,self.teams_dataset['name']))
         df_season['opponent_team'] = df_season['opponent_team'].map(temp_dict)
         return df_season
     
@@ -220,8 +171,9 @@ class DATASETS:
         '''get all remaining fixtures info for a given player based on full name'''
         df_fixtures = pd.json_normalize(self.get_player_json(player)['fixtures'])
         df_fixtures.drop(columns=['id', 'code', 'team_h_score', 'team_a_score', 'event', 'finished', 'minutes', 'provisional_start_time'], inplace = True)
-        temp_dict= dict(zip(self.teams_dataset['id'],self.teams_dataset['name']))
+        temp_dict= dict(zip(self.teams_dataset.index, self.teams_dataset['name']))
         df_fixtures['team_h'] = df_fixtures['team_h'].map(temp_dict)
         df_fixtures['team_a'] = df_fixtures['team_a'].map(temp_dict)
-        df_fixtures.set_index('event_name', inplace=True)
+        first_column = df_fixtures.pop('event_name')
+        df_fixtures.insert(0, 'event_name', first_column)
         return df_fixtures
