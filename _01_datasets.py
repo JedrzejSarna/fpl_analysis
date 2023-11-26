@@ -155,25 +155,84 @@ class DATASETS:
 
     def df_player_season(self, player):
         '''get all season info for a given player based on full name'''
-        df_season = pd.json_normalize(self.get_player_json(player)['history'])
-        df_season.drop(columns=['element', 'fixture', 'round'], inplace=True)
+        df_player_season = pd.json_normalize(self.get_player_json(player)['history'])
+        df_player_season.drop(columns=['element', 'fixture', 'round'], inplace=True)
         temp_dict= dict(zip(self.teams_dataset.index,self.teams_dataset['name']))
-        df_season['opponent_team'] = df_season['opponent_team'].map(temp_dict)
-        return df_season
+        df_player_season['opponent_team'] = df_player_season['opponent_team'].map(temp_dict)
+        return df_player_season
     
     def df_player_past_seasons(self, player):
         '''get all past seasons info for a given player based on full name'''
-        df_past_seasons = pd.json_normalize(self.get_player_json(player)['history_past'])
-        df_past_seasons.drop(columns=['element_code'], inplace=True)
-        return df_past_seasons
+        df_player_past_seasons = pd.json_normalize(self.get_player_json(player)['history_past'])
+        df_player_past_seasons.drop(columns=['element_code'], inplace=True)
+        return df_player_past_seasons
     
     def df_player_upcom_fixtures(self, player):
         '''get all remaining fixtures info for a given player based on full name'''
-        df_fixtures = pd.json_normalize(self.get_player_json(player)['fixtures'])
-        df_fixtures.drop(columns=['id', 'code', 'team_h_score', 'team_a_score', 'event', 'finished', 'minutes', 'provisional_start_time'], inplace = True)
+        df_player_fixtures = pd.json_normalize(self.get_player_json(player)['fixtures'])
+        df_player_fixtures.drop(columns=['id', 'code', 'team_h_score', 'team_a_score', 'event', 'finished', 'minutes', 'provisional_start_time'], inplace = True)
         temp_dict= dict(zip(self.teams_dataset.index, self.teams_dataset['name']))
-        df_fixtures['team_h'] = df_fixtures['team_h'].map(temp_dict)
-        df_fixtures['team_a'] = df_fixtures['team_a'].map(temp_dict)
-        first_column = df_fixtures.pop('event_name')
-        df_fixtures.insert(0, 'event_name', first_column)
-        return df_fixtures
+        df_player_fixtures['team_h'] = df_player_fixtures['team_h'].map(temp_dict)
+        df_player_fixtures['team_a'] = df_player_fixtures['team_a'].map(temp_dict)
+        first_column = df_player_fixtures.pop('event_name')
+        df_player_fixtures.insert(0, 'event_name', first_column)
+        return df_player_fixtures
+
+###############  SPECIFIC PLAYERS DATASET  #####################
+
+
+    def df_best_player_per_team_pts(self):
+        max_pts_index = self.players_dataset.groupby('team_name')['total_points'].idxmax()
+        df_best_pts = self.players_dataset.loc[max_pts_index, ['player_name', 'total_points']]
+        temp_dict={}
+        for player in df_best_pts['player_name']:
+            temp_dict[player] = np.cumsum(list(self.df_player_season(player)['total_points']))
+        df_player_pts = pd.DataFrame(temp_dict)
+        df_player_pts.index = range(1, df_player_pts.shape[0] + 1)
+        return df_player_pts
+    
+    def df_top5_player_pts(self):
+        max_pts_index = self.players_dataset.groupby('team_name')['total_points'].idxmax()
+        df_best_pts = self.players_dataset.loc[max_pts_index, ['player_name', 'total_points']]
+        df_top5_pts = df_best_pts.nlargest(5, 'total_points')
+        temp_dict={}
+        for player in df_top5_pts['player_name']:
+            temp_dict[player] = np.cumsum(list(self.df_player_season(player)['total_points']))
+        df_player_pts = pd.DataFrame(temp_dict)
+        df_player_pts.index = range(1, df_player_pts.shape[0] + 1)
+        return df_player_pts
+    
+    def df_top5_defender_pts(self):
+        max_pts_index = self.players_dataset[self.players_dataset['position_name']=='Defender'].groupby('team_name')['total_points'].idxmax()
+        df_best_pts = self.players_dataset.loc[max_pts_index, ['player_name', 'total_points']]
+        df_top5_pts = df_best_pts.nlargest(5, 'total_points')
+        temp_dict={}
+        for player in df_top5_pts['player_name']:
+            temp_dict[player] = np.cumsum(list(self.df_player_season(player)['total_points']))
+        df_player_pts = pd.DataFrame(temp_dict)
+        df_player_pts.index = range(1, df_player_pts.shape[0] + 1)
+        return df_player_pts
+    
+
+    def df_top5_midfielder_pts(self):
+        max_pts_index = self.players_dataset[self.players_dataset['position_name']=='Midfielder'].groupby('team_name')['total_points'].idxmax()
+        df_best_pts = self.players_dataset.loc[max_pts_index, ['player_name', 'total_points']]
+        df_top5_pts = df_best_pts.nlargest(5, 'total_points')
+        temp_dict={}
+        for player in df_top5_pts['player_name']:
+            temp_dict[player] = np.cumsum(list(self.df_player_season(player)['total_points']))
+        df_player_pts = pd.DataFrame(temp_dict)
+        df_player_pts.index = range(1, df_player_pts.shape[0] + 1)
+        return df_player_pts
+    
+
+    def df_top5_forward_pts(self):
+        max_pts_index = self.players_dataset[self.players_dataset['position_name']=='Forward'].groupby('team_name')['total_points'].idxmax()
+        df_best_pts = self.players_dataset.loc[max_pts_index, ['player_name', 'total_points']]
+        df_top5_pts = df_best_pts.nlargest(5, 'total_points')
+        temp_dict={}
+        for player in df_top5_pts['player_name']:
+            temp_dict[player] = np.cumsum(list(self.df_player_season(player)['total_points']))
+        df_player_pts = pd.DataFrame(temp_dict)
+        df_player_pts.index = range(1, df_player_pts.shape[0] + 1)
+        return df_player_pts

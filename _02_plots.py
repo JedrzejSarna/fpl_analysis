@@ -14,7 +14,7 @@ warnings.filterwarnings('ignore')
 class PLOTS(DATASETS):
     def __init__(self):
         super().__init__()
-        self.pl_colors_list = [
+        self.pl_teams_list = [
     ("Arsenal", "#EF0107"),
     ("Aston Villa", "#770A0A"),
     ("Bournemouth", "#DA020E"),
@@ -37,8 +37,8 @@ class PLOTS(DATASETS):
     ("Wolves", "#FFD100"),
 ]
         
-        self.pl_colors = [tup[1] for tup in self.pl_colors_list]
-        self.position_colors_dict = {
+        self.pl_teams = [tup[1] for tup in self.pl_teams_list]
+        self.position_teams_dict = {
     "Goalkeeper": "#F1C40F",
     "Defender": "#3498DB",
     "Midfielder": "#27AE60",
@@ -61,7 +61,7 @@ class PLOTS(DATASETS):
         fpl_points_per_club = df
         sns.set_style("darkgrid")
         plt.figure(figsize=(15, 6))
-        sns.barplot(x=fpl_points_per_club.index, y=fpl_points_per_club.values, palette = self.pl_colors)
+        sns.barplot(x=fpl_points_per_club.index, y=fpl_points_per_club.values, palette = self.pl_teams)
         
         plt.xticks(rotation=45, fontsize=12)
         plt.xlabel('Team', fontsize=15)
@@ -87,7 +87,7 @@ class PLOTS(DATASETS):
         
         sns.set_style("darkgrid")
         plt.figure(figsize=(15, 6))
-        sns.barplot(x=df.index, y=df['sum'], palette = list(self.position_colors_dict.values()))
+        sns.barplot(x=df.index, y=df['sum'], palette = list(self.position_teams_dict.values()))
 
         for i, mean in enumerate(df['mean']):
             plt.annotate(f'Mean for player: {mean:.2f}', (i, mean), xytext=(i-0.34, df['sum'][i]), fontsize=15)
@@ -117,7 +117,7 @@ class PLOTS(DATASETS):
         sns.set_style("white")
         plt.figure(figsize=(20, 8))
 
-        sns.scatterplot(x=df['goals_scored'].values, y=df['expected_goals'].values, s = 200, c = self.pl_colors)
+        sns.scatterplot(x=df['goals_scored'].values, y=df['expected_goals'].values, s = 200, c = self.pl_teams)
 
         for index, club in enumerate(df['goals_scored'].index):
             plt.text(df['goals_scored'][index]-0.3, df['expected_goals'][index]+0.25, club, fontsize = 12)
@@ -167,7 +167,7 @@ class PLOTS(DATASETS):
         sns.set_style("white")
         plt.figure(figsize=(20, 8))
 
-        sns.scatterplot(x=df['goals_conceded'].values, y=df['expected_goals_conceded'].values, s = 200, c = self.pl_colors)
+        sns.scatterplot(x=df['goals_conceded'].values, y=df['expected_goals_conceded'].values, s = 200, c = self.pl_teams)
 
         for index, club in enumerate(df['goals_conceded'].index):
             plt.text(df['goals_conceded'][index]-0.3, df['expected_goals_conceded'][index]+0.25, club, fontsize = 12)
@@ -234,3 +234,158 @@ class PLOTS(DATASETS):
         plt.show()
         if save == True:       
             plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+
+    
+    def pointplot_best_player_per_team_points(self, df, save=False):
+
+        sns.set_style("darkgrid")
+        plt.figure(figsize=(20, 8))
+        for ind, player in enumerate(df.columns):
+            sns.lineplot(x=df.index, y=df[player], marker='o', color = self.pl_teams[ind])
+
+        plt.xticks(np.arange(min(df.index), max(df.index)+1, 1.0), fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.xlabel('Gameweek', fontsize=18)
+        plt.ylabel('Total points', fontsize=18)
+        plt.title('Track of points for best player per team', fontsize=20)
+        
+        legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in self.pl_teams]
+        plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
+        plt.show()
+        if save == True:       
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+
+    def pointplot_top5_player_points(self, df, save=False):
+
+        self.build_players_dataset()
+        self.build_positions_dataset()
+        self.build_teams_dataset()
+        self.transform_players_dataset()
+        teams=[]
+        for name in df.columns:
+            teams.append(self.players_dataset.loc[self.players_dataset['player_name']==name, 'team_name'].values[0])
+        colors=[]
+        for team in teams:
+            for team_code in self.pl_teams_list:
+                if team == team_code[0]:
+                    colors.append(team_code[1])
+
+        sns.set_style("darkgrid")
+        plt.figure(figsize=(20, 8))
+        for ind, player in enumerate(df.columns):
+            sns.lineplot(x=df.index, y=df[player], marker='o', color = colors[ind])
+
+        plt.xticks(np.arange(min(df.index), max(df.index)+1, 1.0), fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.xlabel('Gameweek', fontsize=18)
+        plt.ylabel('Total points', fontsize=18)
+        plt.title('Points evolution for Top 5 players (one per team)', fontsize=20)
+        
+        legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in colors]
+        plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
+        plt.show()
+        if save == True:       
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+
+    
+    def pointplot_top5_defender_points(self, df, save=False):
+                
+        self.build_players_dataset()
+        self.build_positions_dataset()
+        self.build_teams_dataset()
+        self.transform_players_dataset()
+        teams=[]
+        for name in df.columns:
+            teams.append(self.players_dataset.loc[self.players_dataset['player_name']==name, 'team_name'].values[0])
+        colors=[]
+        for team in teams:
+            for team_code in self.pl_teams_list:
+                if team == team_code[0]:
+                    colors.append(team_code[1])
+
+        sns.set_style("darkgrid")
+        plt.figure(figsize=(20, 8))
+        for ind, player in enumerate(df.columns):
+            sns.lineplot(x=df.index, y=df[player], marker='o', color = colors[ind])
+
+        plt.xticks(np.arange(min(df.index), max(df.index)+1, 1.0), fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.xlabel('Gameweek', fontsize=18)
+        plt.ylabel('Total points', fontsize=18)
+        plt.title('Points evolution for Top 5 defenders (one per team)', fontsize=20)
+        
+        legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in colors]
+        plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
+        plt.show()
+        if save == True:       
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+
+    
+    def pointplot_top5_midfielder_points(self, df, save=False):
+                
+        self.build_players_dataset()
+        self.build_positions_dataset()
+        self.build_teams_dataset()
+        self.transform_players_dataset()
+        teams=[]
+        for name in df.columns:
+            teams.append(self.players_dataset.loc[self.players_dataset['player_name']==name, 'team_name'].values[0])
+        colors=[]
+        for team in teams:
+            for team_code in self.pl_teams_list:
+                if team == team_code[0]:
+                    colors.append(team_code[1])
+
+        sns.set_style("darkgrid")
+        plt.figure(figsize=(20, 8))
+        for ind, player in enumerate(df.columns):
+            sns.lineplot(x=df.index, y=df[player], marker='o', color = colors[ind])
+
+        plt.xticks(np.arange(min(df.index), max(df.index)+1, 1.0), fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.xlabel('Gameweek', fontsize=18)
+        plt.ylabel('Total points', fontsize=18)
+        plt.title('Points evolution for Top 5 midfielders (one per team)', fontsize=20)
+        
+        legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in colors]
+        plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
+        plt.show()
+        if save == True:       
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+
+    
+    def pointplot_top5_forward_points(self, df, save=False):
+                
+        self.build_players_dataset()
+        self.build_positions_dataset()
+        self.build_teams_dataset()
+        self.transform_players_dataset()
+        teams=[]
+        for name in df.columns:
+            teams.append(self.players_dataset.loc[self.players_dataset['player_name']==name, 'team_name'].values[0])
+        colors=[]
+        for team in teams:
+            for team_code in self.pl_teams_list:
+                if team == team_code[0]:
+                    colors.append(team_code[1])
+
+        sns.set_style("darkgrid")
+        plt.figure(figsize=(20, 8))
+        for ind, player in enumerate(df.columns):
+            sns.lineplot(x=df.index, y=df[player], marker='o', color = colors[ind])
+
+        plt.xticks(np.arange(min(df.index), max(df.index)+1, 1.0), fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.xlabel('Gameweek', fontsize=18)
+        plt.ylabel('Total points', fontsize=18)
+        plt.title('Points evolution for Top 5 forwards (one per team)', fontsize=20)
+        
+        legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in colors]
+        plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
+        plt.show()
+        if save == True:       
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+
+        
+        
+        
