@@ -136,6 +136,16 @@ class DATASETS:
         percentages = [round(value / total_pts , 4) * 100 for value in points]
         df_categories_percentage = pd.DataFrame({"Action" : categories, "Percentage (%)" : percentages})
         return df_categories_percentage
+    
+
+    def df_GA_vs_xGA_performance(self):
+        df = self.players_dataset[['player_name','goals_scored','assists','expected_goal_involvements']]
+        df['goal_involvements'] = df['goals_scored'] + df['assists']
+        df.drop(['goals_scored', 'assists'], axis=1, inplace=True)
+        df['expected_goal_involvements'] = df['expected_goal_involvements'].astype(float)
+        df['overperform'] = df['goal_involvements']-df['expected_goal_involvements']
+        df.sort_values('overperform', inplace=True, ascending=False)
+        return df
 
 
 ###############   PLAYERS DATASET  #####################

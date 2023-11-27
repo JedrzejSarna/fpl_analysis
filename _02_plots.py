@@ -68,9 +68,9 @@ class PLOTS(DATASETS):
         plt.ylabel('Points attained all season', fontsize=15)
         plt.title('Points attained all season for each club', fontsize=18)
         plt.text(0.99, 0.97, "u/DataDrivenDribbler", fontsize=10, ha='right', va='bottom', transform=plt.gca().transAxes, alpha=0.5)
-        plt.show()
         if save == True:       
-            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/barplot_fplpoints_per_club")
+        plt.show()
 
 
 
@@ -99,9 +99,9 @@ class PLOTS(DATASETS):
         plt.ylabel('Points attained all season', fontsize=18)
         plt.title('Points attained all season per position', fontsize=20)
         plt.text(0.99, 0.97, "u/DataDrivenDribbler", fontsize=10, ha='right', va='bottom', transform=plt.gca().transAxes, alpha=0.5)
-        plt.show()
         if save == True:       
-            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/barplot_fplpoints_per_position")
+        plt.show()
 
  
     def scatterplot_Goals_vs_xG(self, df, save=False):
@@ -147,9 +147,9 @@ class PLOTS(DATASETS):
         plt.xlim(0, max(df['goals_scored'].values)+1)
         plt.ylim(0, max(df['expected_goals'].values)+1)
         plt.annotate("u/DataDrivenDribbler", xy=(max(df['goals_scored'].values)-1.5, 0.05), fontsize=10, alpha=0.5)
-        plt.show()
         if save == True:       
-            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/scatterplot_Goals_vs_xG")
+        plt.show()
 
 
 
@@ -198,9 +198,9 @@ class PLOTS(DATASETS):
         plt.xlim(0, max(df['goals_conceded'].values)+1)
         plt.ylim(0, max(df['expected_goals_conceded'].values)+1)
         plt.annotate("u/DataDrivenDribbler", xy=(max(df['goals_conceded'].values)-0.1, 0.05), fontsize=10, alpha=0.5)
-        plt.show()
         if save == True:       
-            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/scatterplot_Goals_Against_vs_xGA")
+        plt.show()
         
 
 
@@ -231,10 +231,9 @@ class PLOTS(DATASETS):
         plt.yticks([i for i in range(-10,51,10)], fontsize=13)
         plt.title('(Approximate) Split of total FPL points per action', fontsize=24)
         plt.text(0.99, 0.97, "u/DataDrivenDribbler", fontsize=10, ha='right', va='bottom', transform=plt.gca().transAxes, alpha=0.5)
-        plt.show()
         if save == True:       
-            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
-
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/barplot_fplpoints_split")
+        plt.show()
     
     def pointplot_best_player_per_team_points(self, df, save=False):
 
@@ -251,9 +250,9 @@ class PLOTS(DATASETS):
         
         legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in self.pl_teams]
         plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
-        plt.show()
         if save == True:       
-            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/pointplot_best_player_per_team_points")
+        plt.show()
 
     def pointplot_top5_player_points(self, df, save=False):
 
@@ -283,9 +282,9 @@ class PLOTS(DATASETS):
         
         legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in colors]
         plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
-        plt.show()
         if save == True:       
-            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/pointplot_top5_player_points")
+        plt.show()
 
     
     def pointplot_top5_defender_points(self, df, save=False):
@@ -316,9 +315,10 @@ class PLOTS(DATASETS):
         
         legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in colors]
         plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
-        plt.show()
         if save == True:       
-            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/pointplot_top5_defender_points")
+        plt.show()
+
 
     
     def pointplot_top5_midfielder_points(self, df, save=False):
@@ -349,9 +349,9 @@ class PLOTS(DATASETS):
         
         legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in colors]
         plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
-        plt.show()
         if save == True:       
-            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/pointplot_top5_midfielder_points")
+        plt.show()
 
     
     def pointplot_top5_forward_points(self, df, save=False):
@@ -382,9 +382,9 @@ class PLOTS(DATASETS):
         
         legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in colors]
         plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
-        plt.show()
         if save == True:       
-            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures")
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/pointplot_top5_forward_points")
+        plt.show()
 
         
         
