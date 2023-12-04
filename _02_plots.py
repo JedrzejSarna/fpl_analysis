@@ -136,7 +136,7 @@ class PLOTS(DATASETS):
         ax.add_patch(underperform_triangle)
 
         plt.text(1, max(df['expected_goals'].values)-1, 'UNDERPERFORMING', fontsize = 20, c = 'salmon')
-        plt.text(max(df['goals_scored'].values)-min(df['goals_scored'].values),1, 'OVERPERFORMING', fontsize = 20, c= 'mediumseagreen')
+        plt.text(max(df['goals_scored'].values)*0.8,1, 'OVERPERFORMING', fontsize = 20, c= 'mediumseagreen')
 
 
         plt.xticks(fontsize=14)
@@ -146,7 +146,7 @@ class PLOTS(DATASETS):
         plt.title('Goals vs Expected Goals (without OG)', fontsize=20)
         plt.xlim(0, max(df['goals_scored'].values)+1)
         plt.ylim(0, max(df['expected_goals'].values)+1)
-        plt.annotate("u/DataDrivenDribbler", xy=(max(df['goals_scored'].values)-1.5, 0.05), fontsize=10, alpha=0.5)
+        plt.annotate("u/DataDrivenDribbler", xy=(max(df['goals_scored'].values)*0.93, 0.05), fontsize=10, alpha=0.5)
         if save == True:       
             plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/scatterplot_Goals_vs_xG")
         plt.show()
@@ -187,7 +187,7 @@ class PLOTS(DATASETS):
         ax.add_patch(underperform_triangle)
 
         plt.text(1, max(df['expected_goals_conceded'].values)-1, 'OVERPERFORMING', fontsize = 20, c = 'mediumseagreen')
-        plt.text(max(df['goals_conceded'].values)-3,1, 'UNDERPERFORMING', fontsize = 20, c= 'salmon')
+        plt.text(max(df['goals_conceded'].values)*0.8,1, 'UNDERPERFORMING', fontsize = 20, c= 'salmon')
 
 
         plt.xticks(fontsize=14)
@@ -197,7 +197,7 @@ class PLOTS(DATASETS):
         plt.title('Goals Against vs Expected Goals Against', fontsize=20)
         plt.xlim(0, max(df['goals_conceded'].values)+1)
         plt.ylim(0, max(df['expected_goals_conceded'].values)+1)
-        plt.annotate("u/DataDrivenDribbler", xy=(max(df['goals_conceded'].values)-0.1, 0.05), fontsize=10, alpha=0.5)
+        plt.annotate("u/DataDrivenDribbler", xy=(max(df['goals_conceded'].values)*0.93, 0.05), fontsize=10, alpha=0.5)
         if save == True:       
             plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/scatterplot_Goals_Against_vs_xGA")
         plt.show()
@@ -282,6 +282,8 @@ class PLOTS(DATASETS):
         
         legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in colors]
         plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
+        plt.text(0.99, 0.03, "u/DataDrivenDribbler", fontsize=10, ha='right', va='bottom', transform=plt.gca().transAxes, alpha=0.5)
+
         if save == True:       
             plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/pointplot_top5_player_points")
         plt.show()
@@ -387,5 +389,18 @@ class PLOTS(DATASETS):
         plt.show()
 
         
+    def barplot_top5_GA_vs_XGA(self, df, save=False):
+        df_top5 = df.head()
+
+        ax=plt.subplots()
+ 
+        # plotting columns
+        ax = sns.barplot(x=df_top5["player_name"], y=df_top5["goal_involvements"], color='b')
+        ax = sns.barplot(x=df_top5["player_name"], y=df_top5["expected_goal_involvements"], color='r')
         
+        # renaming the axes
+        ax.set(xlabel="Player", ylabel="Goal involvments")
+        
+        # visualizing illustration
+        plt.show()
         
