@@ -15,14 +15,14 @@ class PLOTS(DATASETS):
     def __init__(self):
         super().__init__()
         self.pl_teams_list = [
-    ("Arsenal", "#EF0107"),
+    ("Arsenal", "#F20603"),
     ("Aston Villa", "#770A0A"),
-    ("Bournemouth", "#DA020E"),
-    ("Brentford", "#F20603"),
-    ("Brighton", "#0057B8"),
+    ("Bournemouth", "#CD0000"),
+    ("Brentford", "#CD5555"),
+    ("Brighton", "#1874CD"),
     ("Burnley", "#A52A2A"),
     ("Chelsea", "#034694"),
-    ("Crystal Palace", "#E03A3E"),
+    ("Crystal Palace", "#6495ED"),
     ("Everton", "#003399"),
     ("Fulham", "#000000"),
     ("Liverpool", "#C8102E"),
@@ -31,7 +31,7 @@ class PLOTS(DATASETS):
     ("Man Utd", "#DA020E"),
     ("Newcastle", "#000000"),
     ("Nott'm Forest", "#DC143C"),
-    ("Sheffield Utd", "#EE2737"),
+    ("Sheffield Utd", "#EE5C42"),
     ("Spurs", "#001C58"),
     ("West Ham", "#7A263A"),
     ("Wolves", "#FFD100"),
