@@ -64,6 +64,7 @@ class PLOTS(DATASETS):
         sns.barplot(x=fpl_points_per_club.index, y=fpl_points_per_club.values, palette = self.pl_teams)
         
         plt.xticks(rotation=45, fontsize=12)
+        plt.yticks(fontsize=12)
         plt.xlabel('Team', fontsize=15)
         plt.ylabel('Points attained all season', fontsize=15)
         plt.title('Points attained all season for each club', fontsize=18)
@@ -90,11 +91,12 @@ class PLOTS(DATASETS):
         sns.barplot(x=df.index, y=df['sum'], palette = list(self.position_teams_dict.values()))
 
         for i, mean in enumerate(df['mean']):
-            plt.annotate(f'Mean for player: {mean:.2f}', (i, mean), xytext=(i-0.34, df['sum'][i]), fontsize=15)
+            plt.annotate(f'Mean for player: {mean:.2f}', (i, mean), xytext=(i-0.34, df['sum'][i]*1.01), fontsize=15)
         for i, count in enumerate(df['count']):
-            plt.annotate(f'Count of players: {count}', (i, count), ha='center', va='bottom', fontsize=15)
+            plt.annotate(f'Count of players: {count}', (i, count), xytext=(i-0.34, 75), fontsize=15)
         
         plt.xticks(rotation=45, fontsize=15)
+        plt.yticks(fontsize=12)
         plt.xlabel('Positions', fontsize=18)
         plt.ylabel('Points attained all season', fontsize=18)
         plt.title('Points attained all season per position', fontsize=20)
@@ -389,18 +391,38 @@ class PLOTS(DATASETS):
         plt.show()
 
         
-    def barplot_top5_GA_vs_XGA(self, df, save=False):
+    def barplot_top5_overperformers(self, df, save=False):
         df_top5 = df.head()
 
-        ax=plt.subplots()
- 
-        # plotting columns
-        ax = sns.barplot(x=df_top5["player_name"], y=df_top5["goal_involvements"], color='b')
-        ax = sns.barplot(x=df_top5["player_name"], y=df_top5["expected_goal_involvements"], color='r')
-        
-        # renaming the axes
-        ax.set(xlabel="Player", ylabel="Goal involvments")
-        
-        # visualizing illustration
+        plt.figure(figsize=(15, 6))        
+        sns.barplot(x=df_top5["player_name"], y=df_top5["goal_involvements"], color='lightsteelblue')
+        sns.barplot(x=df_top5["player_name"], y=df_top5["expected_goal_involvements"], color='midnightblue')
+
+        for i, entry in enumerate(df_top5['goal_involvements']):
+            plt.annotate(f"Goal involvements: {entry}", (i, entry), xytext=(i-0.34, entry*1.01), fontsize=10)
+        for i, entry in enumerate(df_top5['expected_goal_involvements']):
+            plt.annotate(f"XG involvements: {entry}", (i, entry), xytext=(i-0.34, entry*1.01), fontsize=10)
+        plt.xlabel('Player', fontsize=18)
+        plt.ylabel('Goals', fontsize=18)
+        plt.title('Biggest overperformers (XGI - XG difference)', fontsize=20)
+        if save == True:       
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/barplot_top5_overperformers")
         plt.show()
-        
+
+    def barplot_top5_underperformers(self, df, save=False):
+        df_top5 = df.iloc[-5:]
+
+        plt.figure(figsize=(15, 6))
+        sns.barplot(x=df_top5["player_name"], y=df_top5["expected_goal_involvements"], color='lightcoral')
+        sns.barplot(x=df_top5["player_name"], y=df_top5["goal_involvements"], color='darkred')
+
+        for i, entry in enumerate(df_top5['goal_involvements']):
+            plt.annotate(f"Goal involvements: {entry}", (i, entry), xytext=(i-0.34, entry*1.01), fontsize=10)
+        for i, entry in enumerate(df_top5['expected_goal_involvements']):
+            plt.annotate(f"XG involvements: {entry}", (i, entry), xytext=(i-0.34, entry*1.01), fontsize=10)
+        plt.xlabel('Player', fontsize=18)
+        plt.ylabel('Goals', fontsize=18)
+        plt.title('Biggest underperformers (XGI - XG difference)', fontsize=20)
+        if save == True:       
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/barplot_top5_underperformers")
+        plt.show()      
