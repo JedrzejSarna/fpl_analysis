@@ -14,7 +14,7 @@ warnings.filterwarnings('ignore')
 class PLOTS(DATASETS):
     def __init__(self):
         super().__init__()
-        self.pl_teams_list = [
+        self.pl_teams_col_list = [
     ("Arsenal", "#F20603"),
     ("Aston Villa", "#770A0A"),
     ("Bournemouth", "#CD0000"),
@@ -37,7 +37,7 @@ class PLOTS(DATASETS):
     ("Wolves", "#FFD100"),
 ]
         
-        self.pl_teams = [tup[1] for tup in self.pl_teams_list]
+        self.pl_teams_col = [tup[1] for tup in self.pl_teams_col_list]
         self.position_teams_dict = {
     "Goalkeeper": "#F1C40F",
     "Defender": "#3498DB",
@@ -61,7 +61,7 @@ class PLOTS(DATASETS):
         fpl_points_per_club = df
         sns.set_style("darkgrid")
         plt.figure(figsize=(15, 6))
-        sns.barplot(x=fpl_points_per_club.index, y=fpl_points_per_club.values, palette = self.pl_teams)
+        sns.barplot(x=fpl_points_per_club.index, y=fpl_points_per_club.values, palette = self.pl_teams_col)
         
         plt.xticks(rotation=45, fontsize=12)
         plt.yticks(fontsize=12)
@@ -119,7 +119,7 @@ class PLOTS(DATASETS):
         sns.set_style("white")
         plt.figure(figsize=(20, 8))
 
-        sns.scatterplot(x=df['goals_scored'].values, y=df['expected_goals'].values, s = 200, c = self.pl_teams)
+        sns.scatterplot(x=df['goals_scored'].values, y=df['expected_goals'].values, s = 200, c = self.pl_teams_col)
 
         for index, club in enumerate(df['goals_scored'].index):
             plt.text(df['goals_scored'][index]-0.3, df['expected_goals'][index]+0.25, club, fontsize = 12)
@@ -127,10 +127,10 @@ class PLOTS(DATASETS):
         x_values = np.linspace(0, max(max(df['goals_scored'].values),max(df['expected_goals'].values))+1)
         plt.plot(x_values, x_values, color='gray', linestyle='--')
 
-        overperform_area = [(0, 0), (max(df['goals_scored'].values)+1, 0), (max(df['goals_scored'].values)+1, max(df['goals_scored'].values)+1)]
+        overperform_area = [(0, 0), (max(df['goals_scored'].values)+1, 0), (max(df['goals_scored'].values)*1.1, max(df['goals_scored'].values)*1.1)]
         overperform_triangle = patches.Polygon(overperform_area, closed=True, facecolor='lightgreen', alpha=0.2)
 
-        underperform_area = [(0, 0), (0, max(df['goals_scored'].values)+1), (max(df['goals_scored'].values)+1, max(df['goals_scored'].values)+1)]
+        underperform_area = [(0, 0), (0, max(df['expected_goals'].values)+1), (max(df['goals_scored'].values)*1.1, max(df['goals_scored'].values)*1.1)]
         underperform_triangle = patches.Polygon(underperform_area, closed=True, facecolor='lightcoral', alpha=0.2)
         
         ax = plt.gca()
@@ -169,7 +169,7 @@ class PLOTS(DATASETS):
         sns.set_style("white")
         plt.figure(figsize=(20, 8))
 
-        sns.scatterplot(x=df['goals_conceded'].values, y=df['expected_goals_conceded'].values, s = 200, c = self.pl_teams)
+        sns.scatterplot(x=df['goals_conceded'].values, y=df['expected_goals_conceded'].values, s = 200, c = self.pl_teams_col)
 
         for index, club in enumerate(df['goals_conceded'].index):
             plt.text(df['goals_conceded'][index]-0.3, df['expected_goals_conceded'][index]+0.25, club, fontsize = 12)
@@ -178,10 +178,10 @@ class PLOTS(DATASETS):
         plt.plot(x_values, x_values, color='gray', linestyle='--')
 
 
-        underperform_area = [(0, 0), (max(df['goals_conceded'].values)+1, 0), (max(df['goals_conceded'].values)+1, max(df['goals_conceded'].values)+1)]
+        underperform_area = [(0, 0), (max(df['goals_conceded'].values)+1, 0), (max(df['goals_conceded'].values)*1.1, max(df['goals_conceded'].values)*1.1)]
         underperform_triangle = patches.Polygon(underperform_area, closed=True, facecolor='lightcoral', alpha=0.2)
 
-        overperform_area = [(0, 0), (0, max(df['expected_goals_conceded'].values)+1), (max(df['expected_goals_conceded'].values)+1, max(df['expected_goals_conceded'].values)+1)]
+        overperform_area = [(0, 0), (0, max(df['expected_goals_conceded'].values)+1), (max(df['expected_goals_conceded'].values)*1.1, max(df['expected_goals_conceded'].values)*1.1)]
         overperform_triangle = patches.Polygon(overperform_area, closed=True, facecolor='lightgreen', alpha=0.2)
         
         ax = plt.gca()
@@ -242,7 +242,7 @@ class PLOTS(DATASETS):
         sns.set_style("darkgrid")
         plt.figure(figsize=(20, 8))
         for ind, player in enumerate(df.columns):
-            sns.lineplot(x=df.index, y=df[player], marker='o', color = self.pl_teams[ind])
+            sns.lineplot(x=df.index, y=df[player], marker='o', color = self.pl_teams_col[ind])
 
         plt.xticks(np.arange(min(df.index), max(df.index)+1, 1.0), fontsize=14)
         plt.yticks(fontsize=14)
@@ -250,7 +250,7 @@ class PLOTS(DATASETS):
         plt.ylabel('Total points', fontsize=18)
         plt.title('Track of points for best player per team', fontsize=20)
         
-        legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in self.pl_teams]
+        legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in self.pl_teams_col]
         plt.legend(legend_handles, df.columns, loc='upper left', ncols=2, fontsize=12)
         if save == True:       
             plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/pointplot_best_player_per_team_points")
@@ -267,7 +267,7 @@ class PLOTS(DATASETS):
             teams.append(self.players_dataset.loc[self.players_dataset['player_name']==name, 'team_name'].values[0])
         colors=[]
         for team in teams:
-            for team_code in self.pl_teams_list:
+            for team_code in self.pl_teams_col_list:
                 if team == team_code[0]:
                     colors.append(team_code[1])
 
@@ -302,7 +302,7 @@ class PLOTS(DATASETS):
             teams.append(self.players_dataset.loc[self.players_dataset['player_name']==name, 'team_name'].values[0])
         colors=[]
         for team in teams:
-            for team_code in self.pl_teams_list:
+            for team_code in self.pl_teams_col_list:
                 if team == team_code[0]:
                     colors.append(team_code[1])
 
@@ -336,7 +336,7 @@ class PLOTS(DATASETS):
             teams.append(self.players_dataset.loc[self.players_dataset['player_name']==name, 'team_name'].values[0])
         colors=[]
         for team in teams:
-            for team_code in self.pl_teams_list:
+            for team_code in self.pl_teams_col_list:
                 if team == team_code[0]:
                     colors.append(team_code[1])
 
@@ -369,7 +369,7 @@ class PLOTS(DATASETS):
             teams.append(self.players_dataset.loc[self.players_dataset['player_name']==name, 'team_name'].values[0])
         colors=[]
         for team in teams:
-            for team_code in self.pl_teams_list:
+            for team_code in self.pl_teams_col_list:
                 if team == team_code[0]:
                     colors.append(team_code[1])
 
@@ -426,3 +426,41 @@ class PLOTS(DATASETS):
         if save == True:       
             plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/barplot_top5_underperformers")
         plt.show()      
+
+    def scatterplot_top50_pts_creativity_vs_threat(self, df, save=False):
+        
+        self.build_players_dataset()
+        self.build_positions_dataset()
+        self.build_teams_dataset()
+        self.transform_players_dataset()
+        teams=[]
+        for name in df['player_name']:
+            teams.append(self.players_dataset.loc[self.players_dataset['player_name']==name, 'team_name'].values[0])
+        colors=[]
+        for team in teams:
+            for team_code in self.pl_teams_col_list:
+                if team == team_code[0]:
+                    colors.append(team_code[1])
+        sns.set_style("darkgrid")
+        plt.figure(figsize=(10, 10))
+
+        sns.scatterplot(data=df, x='creativity', y='threat', color=colors)
+
+        for i, player in enumerate(df['player_name']):
+            plt.text(df['creativity'][i], df['threat'][i], player, fontsize=8)
+
+        plt.axvline(x=df['creativity'].mean(), linestyle='--', color='gray')
+        plt.axhline(y=df['threat'].mean(), linestyle='--', color='gray')
+
+        plt.text(50, max(df['threat'])*0.9, 'THREAT', fontsize = 20, c = 'darkorange')
+        plt.text(max(df['creativity'])*0.8, 100, 'CREATOR', fontsize = 20, c= 'dodgerblue')
+        plt.text(50, 100, 'AVERAGE', fontsize = 20, c= 'firebrick')
+        plt.text(max(df['creativity'])*0.8,  max(df['threat'])*0.9, 'COMPLETE', fontsize = 20, c= 'green')
+
+
+        plt.title('Player type for Top 50 Mid&Att FPL point scorers', fontsize=20)
+        plt.xlabel('Creativity', fontsize=18)
+        plt.ylabel('Threat', fontsize=18)
+        if save == True:       
+            plt.savefig("/Users/jedrzejsarna/Desktop/GitHub/fpl_analysis/figures/scatterplot_top50_pts_creativity_vs_threat")
+        plt.show() 

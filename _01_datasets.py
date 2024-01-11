@@ -21,7 +21,7 @@ class DATASETS:
                                       'cost_change_event', 'cost_change_event_fall', 'cost_change_start_fall',
                                       'in_dreamteam', 'news', 'news_added', 'photo', 'special', 'squad_number',
                                       'corners_and_indirect_freekicks_text','direct_freekicks_text','penalties_text',
-                                      'first_name', 'second_name', 'team_code'], axis=1, inplace=True)
+                                      'second_name', 'team_code'], axis=1, inplace=True)
         self.players_dataset = players_dataset
 
 
@@ -78,6 +78,19 @@ class DATASETS:
         players_dataset.sort_index(inplace=True)
         first_column = players_dataset.pop('player_name')
         players_dataset.insert(0, 'player_name', first_column)
+        # deal with duplicate player names
+        duplicate_names = players_dataset[players_dataset.duplicated(subset='player_name', keep=False)]
+        duplicate_names['player_name'] = duplicate_names['first_name'] + ' ' + duplicate_names['player_name']
+        players_dataset.update(duplicate_names)
+
+        players_dataset = players_dataset.drop(columns=['first_name'])
+        # change some object type columns to float type
+        object_columns = players_dataset.select_dtypes(include=['object']).columns
+        keep_object_columns = ['player_name','status','team_name','team_name_short','position_name', 'position_name_short']
+        to_float_columns = [item for item in object_columns.to_list() if item not in keep_object_columns]
+        for column in to_float_columns:
+            players_dataset[column] = players_dataset[column].astype(float)
+
         self.players_dataset = players_dataset
 
 
@@ -166,7 +179,21 @@ class DATASETS:
     def df_player_season(self, player):
         '''get all season info for a given player based on full name'''
         df_player_season = pd.json_normalize(self.get_player_json(player)['history'])
-        df_player_season.drop(columns=['element', 'fixture', 'round'], inplace=True)
+        df_player_season.drop(columns=['element', 'fixture'], inplace=True)
+        df_player_season['influence'] = df_player_season['influence'].astype(float)
+        df_player_season['creativity'] = df_player_season['creativity'].astype(float)
+        df_player_season['threat'] = df_player_season['threat'].astype(float)
+        df_player_season['ict_index'] = df_player_season['ict_index'].astype(float)
+        df_player_season['expected_goals'] = df_player_season['expected_goals'].astype(float)
+        df_player_season['expected_assists'] = df_player_season['expected_assists'].astype(float)
+        df_player_season['expected_goal_involvements'] = df_player_season['expected_goal_involvements'].astype(float)
+        df_player_season['expected_goals_conceded'] = df_player_season['expected_goals_conceded'].astype(float)
+        ### add blank gameweek in case there is one
+        max_round = df_player_season['round'].max()
+        all_rounds_df = pd.DataFrame({'round': range(1, max_round + 1)})
+        df_player_season = pd.merge(all_rounds_df, df_player_season, on='round', how='outer')
+        df_player_season.fillna({'opponent_team': 'Blank', 'total_points': 0}, inplace=True)
+
         temp_dict= dict(zip(self.teams_dataset.index,self.teams_dataset['name']))
         df_player_season['opponent_team'] = df_player_season['opponent_team'].map(temp_dict)
         return df_player_season
@@ -189,14 +216,24 @@ class DATASETS:
         return df_player_fixtures
 
 ###############  SPECIFIC PLAYERS DATASET  #####################
-
+    def custom_agg(self, x):
+        '''Used for correcting datasets for players with blanks and double gameweeks'''
+        if x.dtype == 'float64' or x.dtype == 'int64':
+            return x.sum()
+        elif x.name == 'was_home':
+            return x.iloc[0]
+        elif x.name == 'kickoff_time':
+            return x.iloc[0]
+        elif x.name == 'opponent_team':
+            return ', '.join(x.astype(str))
 
     def df_best_player_per_team_pts(self):
         max_pts_index = self.players_dataset.groupby('team_name')['total_points'].idxmax()
         df_best_pts = self.players_dataset.loc[max_pts_index, ['player_name', 'total_points']]
         temp_dict={}
         for player in df_best_pts['player_name']:
-            temp_dict[player] = np.cumsum(list(self.df_player_season(player)['total_points']))
+            temp_df = self.df_player_season(player).groupby('round').agg(self.custom_agg)
+            temp_dict[player] = np.cumsum(list(temp_df['total_points']))
         df_player_pts = pd.DataFrame(temp_dict)
         df_player_pts.index = range(1, df_player_pts.shape[0] + 1)
         return df_player_pts
@@ -207,7 +244,8 @@ class DATASETS:
         df_top5_pts = df_best_pts.nlargest(5, 'total_points')
         temp_dict={}
         for player in df_top5_pts['player_name']:
-            temp_dict[player] = np.cumsum(list(self.df_player_season(player)['total_points']))
+            temp_df = self.df_player_season(player).groupby('round').agg(self.custom_agg)
+            temp_dict[player] = np.cumsum(list(temp_df['total_points']))
         df_player_pts = pd.DataFrame(temp_dict)
         df_player_pts.index = range(1, df_player_pts.shape[0] + 1)
         return df_player_pts
@@ -218,7 +256,8 @@ class DATASETS:
         df_top5_pts = df_best_pts.nlargest(5, 'total_points')
         temp_dict={}
         for player in df_top5_pts['player_name']:
-            temp_dict[player] = np.cumsum(list(self.df_player_season(player)['total_points']))
+            temp_df = self.df_player_season(player).groupby('round').agg(self.custom_agg)
+            temp_dict[player] = np.cumsum(list(temp_df['total_points']))
         df_player_pts = pd.DataFrame(temp_dict)
         df_player_pts.index = range(1, df_player_pts.shape[0] + 1)
         return df_player_pts
@@ -230,11 +269,11 @@ class DATASETS:
         df_top5_pts = df_best_pts.nlargest(5, 'total_points')
         temp_dict={}
         for player in df_top5_pts['player_name']:
-            temp_dict[player] = np.cumsum(list(self.df_player_season(player)['total_points']))
+            temp_df = self.df_player_season(player).groupby('round').agg(self.custom_agg)
+            temp_dict[player] = np.cumsum(list(temp_df['total_points']))
         df_player_pts = pd.DataFrame(temp_dict)
         df_player_pts.index = range(1, df_player_pts.shape[0] + 1)
         return df_player_pts
-    
 
     def df_top5_forward_pts(self):
         max_pts_index = self.players_dataset[self.players_dataset['position_name']=='Forward'].groupby('team_name')['total_points'].idxmax()
@@ -242,7 +281,15 @@ class DATASETS:
         df_top5_pts = df_best_pts.nlargest(5, 'total_points')
         temp_dict={}
         for player in df_top5_pts['player_name']:
-            temp_dict[player] = np.cumsum(list(self.df_player_season(player)['total_points']))
+            temp_df = self.df_player_season(player).groupby('round').agg(self.custom_agg)
+            temp_dict[player] = np.cumsum(list(temp_df['total_points']))
         df_player_pts = pd.DataFrame(temp_dict)
         df_player_pts.index = range(1, df_player_pts.shape[0] + 1)
         return df_player_pts
+    
+    def df_top50_pts_creativity_vs_threat(self):
+        df_mid_att = self.players_dataset[self.players_dataset['position_name_short'].isin(['MID','FWD'])]
+        top50_df = df_mid_att.nlargest(50, 'total_points')[['player_name','threat','creativity']]
+        top50_df.reset_index(drop=True, inplace=True)
+        return top50_df
+
